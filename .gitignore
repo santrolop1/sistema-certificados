@@ -33,3 +33,6 @@ generated/
 
 # Configuración local de Claude Code
 .claude/
+
+# Plantillas (pueden contener info privada)
+app/templates/
