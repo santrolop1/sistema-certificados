@@ -9,6 +9,7 @@ python-telegram-bot==21.7
 # Base de datos
 sqlalchemy>=2.0.36
 aiosqlite>=0.20.0
+greenlet>=3.0.0
 
 # Validación (2.11+ incluye wheels para Python 3.14)
 pydantic>=2.11.0
