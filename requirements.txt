@@ -1,0 +1,23 @@
+# Core
+fastapi>=0.115.5
+uvicorn[standard]>=0.32.1
+python-dotenv>=1.0.1
+
+# Bot Telegram
+python-telegram-bot==21.7
+
+# Base de datos
+sqlalchemy>=2.0.36
+aiosqlite>=0.20.0
+
+# Validación (2.11+ incluye wheels para Python 3.14)
+pydantic>=2.11.0
+pydantic-settings>=2.7.0
+
+# Generación documentos
+python-docx>=1.1.2
+
+# Utilidades
+aiofiles>=24.1.0
+httpx>=0.28.0
+schedule>=1.2.2

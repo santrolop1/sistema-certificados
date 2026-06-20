@@ -1,0 +1,35 @@
+# Entorno
+.env
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Base de datos (no versionar datos reales)
+*.db
+*.sqlite3
+
+# Documentos generados y backups
+documentos/
+backups/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Certificados generados
+generated/
+
+# Archivos de proceso
+*.pid
+
+# Archivos de respaldo de plantillas
+*.bak
+
+# Configuración local de Claude Code
+.claude/
