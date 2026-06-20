@@ -34,8 +34,8 @@ generated/
 # Configuración local de Claude Code
 .claude/
 
-# Plantillas (pueden contener info privada)
-app/templates/
+# Plantillas — excluidas del repo público, incluidas en el privado manualmente
+# app/templates/
 
 # Scripts de inicio locales
 iniciar_bot.bat

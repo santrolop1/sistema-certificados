@@ -1,7 +1,6 @@
 import re
 import shutil
 import subprocess
-import zipfile
 from pathlib import Path
 from typing import Iterable
 
@@ -67,20 +66,27 @@ def _validar_template_path(template_path: Path) -> None:
 
 
 def _scan_template_for_placeholders(template_path: Path) -> set[str]:
+    """Lee placeholders consolidando runs para no perderse texto partido entre runs."""
     found: set[str] = set()
     try:
-        with zipfile.ZipFile(template_path, "r") as zf:
-            for name in zf.namelist():
-                if not name.endswith(".xml"):
-                    continue
-                raw = zf.read(name)
-                try:
-                    text = raw.decode("utf-8")
-                except UnicodeDecodeError:
-                    text = raw.decode("utf-8", errors="ignore")
-                found.update(_PLACEHOLDER_PATTERN.findall(text))
-    except zipfile.BadZipFile as exc:
+        doc = Document(template_path)
+    except Exception as exc:
         raise ValueError(f"La plantilla {template_path.name} no es un archivo DOCX válido.") from exc
+
+    def _scan_paragraphs(paragraphs) -> None:
+        for p in paragraphs:
+            texto = "".join(r.text for r in p.runs)
+            found.update(_PLACEHOLDER_PATTERN.findall(texto))
+
+    _scan_paragraphs(doc.paragraphs)
+    for tabla in doc.tables:
+        for fila in tabla.rows:
+            for celda in fila.cells:
+                _scan_paragraphs(celda.paragraphs)
+    for seccion in doc.sections:
+        _scan_paragraphs(seccion.header.paragraphs)
+        _scan_paragraphs(seccion.footer.paragraphs)
+
     return found
 
 
@@ -222,33 +228,28 @@ def generar_certificado_docx(certificado: Certificate, plantilla: int = 1) -> Pa
         "Aceite de cocina usado – ACU",
     )
 
-    replacements: dict[str, str] = {}
-    if "{{codigo}}" in placeholders:
-        replacements["{{codigo}}"] = certificado.codigo_certificado
-    if "{{restaurante}}" in placeholders:
-        replacements["{{restaurante}}"] = certificado.restaurante
-    if "{{nit}}" in placeholders:
-        replacements["{{nit}}"] = certificado.nit
-    if "{{direccion}}" in placeholders:
-        replacements["{{direccion}}"] = certificado.direccion
-    if "{{telefono}}" in placeholders:
-        replacements["{{telefono}}"] = ""
-    if "{{ciudad}}" in placeholders:
-        replacements["{{ciudad}}"] = certificado.ciudad
-    if "{{fecha_recoleccion}}" in placeholders:
-        replacements["{{fecha_recoleccion}}"] = certificado.fecha_recoleccion.strftime("%d/%m/%Y")
-    if "{{descripcion_tipo}}" in placeholders:
-        replacements["{{descripcion_tipo}}"] = descripcion
-    if "{{cantidad}}" in placeholders:
-        replacements["{{cantidad}}"] = cantidad_str
-    if "{{descuento}}" in placeholders:
-        replacements["{{descuento}}"] = "0"
-    if "{{total}}" in placeholders:
-        replacements["{{total}}"] = cantidad_str
-    if "{{fecha_generacion}}" in placeholders:
-        replacements["{{fecha_generacion}}"] = certificado.fecha_generacion.strftime("%d/%m/%Y")
-    if "{{dia}}" in placeholders:
-        replacements["{{dia}}"] = str(certificado.fecha_recoleccion.day)
+    # Mapa de todos los posibles placeholders (con y sin tildes/espacios)
+    _VALORES: dict[str, str] = {
+        "{{codigo}}":              certificado.codigo_certificado,
+        "{{restaurante}}":         certificado.restaurante,
+        "{{nit}}":                 certificado.nit,
+        "{{direccion}}":           certificado.direccion,
+        "{{dirección}}":           certificado.direccion,
+        "{{telefono}}":            "",
+        "{{teléfono}}":            "",
+        "{{ciudad}}":              certificado.ciudad,
+        "{{fecha_recoleccion}}":   certificado.fecha_recoleccion.strftime("%d/%m/%Y"),
+        "{{fecha recolección}}":   certificado.fecha_recoleccion.strftime("%d/%m/%Y"),
+        "{{descripcion_tipo}}":    descripcion,
+        "{{descripción_tipo}}":    descripcion,
+        "{{cantidad}}":            cantidad_str,
+        "{{descuento}}":           "0",
+        "{{total}}":               cantidad_str,
+        "{{fecha_generacion}}":    certificado.fecha_generacion.strftime("%d/%m/%Y"),
+        "{{fecha generación}}":    certificado.fecha_generacion.strftime("%d/%m/%Y"),
+        "{{dia}}":                 str(certificado.fecha_recoleccion.day),
+    }
+    replacements = {k: v for k, v in _VALORES.items() if k in placeholders}
 
     doc = Document(template_path)
     if "{{codigo}}" not in placeholders:
