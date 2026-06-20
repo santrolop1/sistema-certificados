@@ -15,7 +15,12 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-_DEFAULT_SOFFICE_PATH = Path("C:/Program Files/LibreOffice/program/soffice.exe")
+_SOFFICE_PATHS = [
+    Path("C:/Program Files/LibreOffice/program/soffice.exe"),          # Windows
+    Path("C:/Program Files (x86)/LibreOffice/program/soffice.exe"),    # Windows 32-bit
+    Path("/Applications/LibreOffice.app/Contents/MacOS/soffice"),      # Mac
+    Path("/usr/lib/libreoffice/program/soffice"),                       # Linux
+]
 _TEMPLATE_FILENAMES = {
     1: "certificado_template.docx",
     2: "certificado_template_2.docx",
@@ -43,8 +48,9 @@ def get_available_templates() -> dict[int, str]:
 
 
 def _find_soffice() -> Path | None:
-    if _DEFAULT_SOFFICE_PATH.exists():
-        return _DEFAULT_SOFFICE_PATH
+    for path in _SOFFICE_PATHS:
+        if path.exists():
+            return path
     found = shutil.which("soffice")
     return Path(found) if found else None
 
