@@ -36,3 +36,7 @@ generated/
 
 # Plantillas (pueden contener info privada)
 app/templates/
+
+# Scripts de inicio locales
+iniciar_bot.bat
+iniciar_bot.command
