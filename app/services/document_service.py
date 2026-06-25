@@ -258,16 +258,7 @@ def generar_certificado_docx(certificado: Certificate, plantilla: int = 1) -> Pa
     replacements = {k: v for k, v in _VALORES.items() if k in placeholders}
 
     doc = Document(template_path)
-    if "{{codigo}}" not in placeholders:
-        _insert_codigo_en_header(doc, certificado.codigo_certificado)
     _reemplazar_documento(doc, replacements)
-
-    faltantes = _placeholders_left_in_doc(doc)
-    if faltantes:
-        raise ValueError(
-            "No se reemplazaron todos los placeholders: "
-            + ", ".join(faltantes)
-        )
 
     ruta_docx = ruta_documento(
         restaurante=certificado.restaurante,
