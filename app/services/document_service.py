@@ -130,10 +130,13 @@ def _insert_codigo_en_header(doc: Document, codigo: str) -> None:
 
 
 def _reemplazar_parrafo(parrafo, replacements: dict[str, str]) -> None:
-    """
-    Consolida todos los runs en uno antes de reemplazar.
-    Evita que un placeholder partido entre runs quede sin reemplazar.
-    """
+    # Primero reemplaza dentro de cada run individual (preserva formato)
+    for run in parrafo.runs:
+        for k, v in replacements.items():
+            if k in run.text:
+                run.text = run.text.replace(k, v)
+
+    # Si quedó algún placeholder partido entre runs, consolida solo ese párrafo
     texto = "".join(r.text for r in parrafo.runs)
     if not any(k in texto for k in replacements):
         return
@@ -255,7 +258,8 @@ def generar_certificado_docx(certificado: Certificate, plantilla: int = 1) -> Pa
         "{{fecha generación}}":    certificado.fecha_generacion.strftime("%d/%m/%Y"),
         "{{dia}}":                 str(certificado.fecha_recoleccion.day),
     }
-    replacements = {k: v for k, v in _VALORES.items() if k in placeholders}
+    # Siempre incluir todos — _reemplazar_parrafo consolida runs y atrapa los partidos
+    replacements = _VALORES
 
     doc = Document(template_path)
     _reemplazar_documento(doc, replacements)

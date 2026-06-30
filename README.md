@@ -29,13 +29,14 @@ A production-ready backend system for automating the generation of used cooking 
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.14 |
+| Language | Python 3.12+ |
 | Bot framework | python-telegram-bot 21.7 |
 | API framework | FastAPI + Uvicorn |
 | ORM | SQLAlchemy 2.x (async) |
 | Database | SQLite via aiosqlite |
 | Validation | Pydantic v2 + pydantic-settings |
 | Document generation | python-docx |
+| PDF conversion | LibreOffice headless |
 | Async I/O | asyncio + aiofiles |
 
 ---
@@ -82,6 +83,19 @@ A production-ready backend system for automating the generation of used cooking 
 
 ---
 
+## Security
+
+- **No credentials in source code** — All secrets (bot token, user IDs) are loaded exclusively from `.env`, which is listed in `.gitignore` and never committed
+- **Whitelist-based access control** — Only Telegram user IDs explicitly listed in `AUTHORIZED_USERS` can interact with the bot; all other users are silently rejected
+- **No public API surface** — The system has no exposed HTTP endpoints; all interaction happens through the Telegram bot protocol
+- **Soft delete only** — Certificate records are never permanently destroyed; deleted records are flagged with a timestamp and can be audited or restored
+- **Full audit log** — Every mutation (create, update, delete, restore) is recorded with the actor's Telegram ID and a full before/after JSON snapshot
+- **Single-instance guard** — A PID file prevents running two bot instances simultaneously, avoiding race conditions on the database
+- **Input validation at every step** — All user inputs (NIT format, date ranges, quantities) are validated before being written to the database
+- **Generated files isolated** — Certificates are stored in a local `generated/` directory, never exposed publicly
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -89,6 +103,7 @@ A production-ready backend system for automating the generation of used cooking 
 - Python 3.12+
 - A Telegram bot token from [@BotFather](https://t.me/BotFather)
 - Your Telegram user ID (use [@userinfobot](https://t.me/userinfobot))
+- LibreOffice (for PDF conversion) — [libreoffice.org](https://www.libreoffice.org/download/download-libreoffice/)
 
 ### Installation
 
@@ -127,6 +142,8 @@ Place `.docx` template files in `app/templates/`:
 app/templates/certificado_template.docx     → Template 1
 app/templates/certificado_template_2.docx   → Template 2
 ```
+
+Placeholders supported in templates: `{{restaurante}}`, `{{nit}}`, `{{dirección}}`, `{{ciudad}}`, `{{fecha recolección}}`, `{{cantidad}}`, `{{fecha generación}}`
 
 ### Run
 
@@ -204,14 +221,28 @@ Sistema backend listo para producción que automatiza la generación de certific
 
 | Capa | Tecnología |
 |---|---|
-| Lenguaje | Python 3.14 |
+| Lenguaje | Python 3.12+ |
 | Bot | python-telegram-bot 21.7 |
 | API | FastAPI + Uvicorn |
 | ORM | SQLAlchemy 2.x (async) |
 | Base de datos | SQLite via aiosqlite |
 | Validación | Pydantic v2 + pydantic-settings |
 | Generación de docs | python-docx |
+| Conversión PDF | LibreOffice headless |
 | I/O asíncrono | asyncio + aiofiles |
+
+---
+
+## Seguridad
+
+- **Sin credenciales en el código** — El token del bot y los IDs de usuario se cargan exclusivamente desde `.env`, que está en `.gitignore` y nunca se sube al repositorio
+- **Control de acceso por lista blanca** — Solo los IDs de Telegram en `AUTHORIZED_USERS` pueden interactuar con el bot; cualquier otro usuario es rechazado silenciosamente
+- **Sin API pública expuesta** — No hay endpoints HTTP públicos; toda la interacción ocurre a través del protocolo de Telegram
+- **Solo soft delete** — Los certificados nunca se destruyen permanentemente; los eliminados quedan marcados con timestamp y pueden auditarse o restaurarse
+- **Auditoría completa** — Cada mutación registra el ID de Telegram del actor y snapshots JSON completos del estado antes y después
+- **Instancia única garantizada** — Un archivo PID evita ejecutar dos instancias del bot simultáneamente, previniendo condiciones de carrera en la base de datos
+- **Validación en cada paso** — Todos los inputs del usuario (formato NIT, fechas, cantidades) se validan antes de escribir en la base de datos
+- **Archivos generados aislados** — Los certificados se almacenan en un directorio local `generated/`, nunca expuesto públicamente
 
 ---
 
@@ -222,6 +253,7 @@ Sistema backend listo para producción que automatiza la generación de certific
 - Python 3.12+
 - Token de bot de Telegram desde [@BotFather](https://t.me/BotFather)
 - Tu ID de Telegram (usa [@userinfobot](https://t.me/userinfobot))
+- LibreOffice (para conversión a PDF) — [libreoffice.org](https://www.libreoffice.org/download/download-libreoffice/)
 
 ### Instalación
 
@@ -260,6 +292,8 @@ Coloca los archivos `.docx` en `app/templates/`:
 app/templates/certificado_template.docx     → Plantilla 1
 app/templates/certificado_template_2.docx   → Plantilla 2
 ```
+
+Placeholders soportados: `{{restaurante}}`, `{{nit}}`, `{{dirección}}`, `{{ciudad}}`, `{{fecha recolección}}`, `{{cantidad}}`, `{{fecha generación}}`
 
 ### Ejecutar
 
